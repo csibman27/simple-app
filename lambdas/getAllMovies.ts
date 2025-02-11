@@ -1,6 +1,6 @@
 import { Handler } from "aws-lambda";
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 
 const ddbDocClient = createDDbDocClient();
 
@@ -8,36 +8,24 @@ export const handler: Handler = async (event, context) => {
   try {
     console.log("Event: ", JSON.stringify(event));
     const queryString = event?.queryStringParameters;
-    const movieId = queryString ? parseInt(queryString.movieId) : undefined;
 
-    if (!movieId) {
-      return {
-        statusCode: 404,
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({ Message: "Missing movie Id" }),
-      };
-    }
     const commandOutput = await ddbDocClient.send(
-      new GetCommand({
-        TableName: process.env.TABLE_NAME,
-        Key: { id: movieId },
+      new ScanCommand({
+        TableName: "MoviesTable",
       })
     );
-    console.log('GetCommand response: ', commandOutput)  // NEW
 
-    if (!commandOutput.Item) {
+    if (!commandOutput.Items?.map) {
       return {
         statusCode: 404,
         headers: {
           "content-type": "application/json",
         },
-        body: JSON.stringify({ Message: "Invalid movie Id" }),
+        body: JSON.stringify({ Message: "Invalid call" }),
       };
     }
     const body = {
-      data: commandOutput.Item,
+      data: commandOutput.Items?.map,
     };
 
     // Return Response
