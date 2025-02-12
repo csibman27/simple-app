@@ -72,7 +72,7 @@ export class SimpleAppStack extends cdk.Stack {
         timeout: cdk.Duration.seconds(10),
         memorySize: 128,
         environment: {
-          TABLE_NAME: "moviesTable",
+          TABLE_NAME: moviesTable.tableName,
           REGION: 'eu-west-1',
         },
       }
@@ -102,6 +102,7 @@ export class SimpleAppStack extends cdk.Stack {
  }
  );
  movieCastsTable.grantReadData(getMovieCastMembersFn);
+ moviesTable.grantReadData(getAllMovies)
  
 
     const getMovieCastMembersURL = getMovieCastMembersFn.addFunctionUrl({
@@ -134,7 +135,7 @@ export class SimpleAppStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, "Simple Function Url", { value: simpleFnURL.url });
 
-    new cdk.CfnOutput(this, "All Movies", { value: getAllMovies.url });
+    // new cdk.CfnOutput(this, "All Movies", { value: getAllMovies.url });
 
     new cdk.CfnOutput(this, "Get Movie Cast Url", {
       value: getMovieCastMembersURL.url,

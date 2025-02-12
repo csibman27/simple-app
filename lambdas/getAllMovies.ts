@@ -7,15 +7,14 @@ const ddbDocClient = createDDbDocClient();
 export const handler: Handler = async (event, context) => {
   try {
     console.log("Event: ", JSON.stringify(event));
-    const queryString = event?.queryStringParameters;
 
     const commandOutput = await ddbDocClient.send(
       new ScanCommand({
-        TableName: "MoviesTable",
+        TableName: process.env.TABLE_NAME,
       })
     );
 
-    if (!commandOutput.Items?.map) {
+    if (!commandOutput.Items) {
       return {
         statusCode: 404,
         headers: {
@@ -25,7 +24,7 @@ export const handler: Handler = async (event, context) => {
       };
     }
     const body = {
-      data: commandOutput.Items?.map,
+      data: commandOutput.Items,
     };
 
     // Return Response
