@@ -4,6 +4,8 @@ import {
   DynamoDBDocumentClient,
   QueryCommand,
   QueryCommandInput,
+  GetCommand,
+  GetCommandInput
 } from "@aws-sdk/lib-dynamodb";
 
 const ddbDocClient = createDocumentClient();
@@ -66,6 +68,43 @@ export const handler: Handler = async (event, context) => {
     const commandOutput = await ddbDocClient.send(
       new QueryCommand(commandInput)
  );
+
+  // Query the cast information
+  const castCommandOutput = await ddbDocClient.send(
+    new QueryCommand(commandInput)
+  );
+
+  // added
+  let movieData: any = null;
+    if (queryParams.movie) {
+      // If the "movie" query parameter is provided, fetch additional movie info (title, genre ids, and overview)
+      const movieCommandInput: GetCommandInput = {
+        TableName: process.env.MOVIE_TABLE_NAME,
+        Key: {
+          movieId: movieId,
+        },
+      };
+
+      // Fetch the movie information (title, genre ids, overview)
+      const movieCommandOutput = await ddbDocClient.send(
+        new GetCommand(movieCommandInput)
+      );
+
+      movieData = movieCommandOutput.Item;
+    }
+
+    // Combine the movie and cast information
+    const responseData: any = {
+      cast: castCommandOutput.Items,
+    };
+
+    if (movieData) {
+      responseData.movie = {
+        title: movieData.title,
+        genreIds: movieData.genreIds,
+        overview: movieData.overview,
+      };
+    }
 
     return {
       statusCode: 200,
